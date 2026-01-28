@@ -252,6 +252,8 @@ const ManageBooks = () => {
           rowKey="id"
           pagination={{ pageSize: 10 }}
           locale={{ emptyText: '暂无图书数据' }}
+          scroll={{ x: 'max-content' }}
+          size="middle"
         />
       </Card>
       

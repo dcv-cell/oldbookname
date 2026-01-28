@@ -76,7 +76,6 @@ const ResponsiveNav = ({ children }) => {
         onCollapse={setCollapsed}
         breakpoint="lg"
         collapsedWidth="0"
-        style={{ display: { xs: 'none', lg: 'block' } }}
       >
         <div style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)', borderRadius: '4px' }} />
         <Menu
