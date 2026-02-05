@@ -70,7 +70,7 @@ const ResponsiveNav = ({ children }) => {
         placement="left"
         onClose={() => setMobileVisible(false)}
         open={mobileVisible}
-        width={240}
+        size={240}
       >
         <Menu
           mode="inline"
