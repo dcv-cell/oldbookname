@@ -230,49 +230,51 @@ const AddBook = () => {
       <Row gutter={[16, 24]}>
         <Col xs={24} lg={12}>
           <Card title="封面上传" style={{ marginBottom: '16px' }}>
-            <Form.Item
-              name="cover"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              rules={[{ required: true, message: '请上传图书封面' }]}
-            >
-              <Upload.Dragger
-                multiple={false}
-                accept="image/*"
-                listType="picture-card"
-                beforeUpload={(file) => {
-                  const isImage = file.type.startsWith('image/');
-                  if (!isImage) {
-                    return Upload.LIST_IGNORE;
-                  }
-                  return true;
-                }}
-                style={{ maxWidth: '100%' }}
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="cover"
+                valuePropName="fileList"
+                getValueFromEvent={normFile}
+                rules={[{ required: true, message: '请上传图书封面' }]}
               >
-                <p className="ant-upload-drag-icon">
-                  <UploadOutlined style={{ fontSize: 48 }} />
-                </p>
-                <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
-                <p className="ant-upload-hint">支持 JPG、PNG、GIF 等格式</p>
-              </Upload.Dragger>
-            </Form.Item>
-            <div style={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: '8px', justifyContent: 'center' }}>
-              <Button 
-                icon={<CameraOutlined />} 
-                type="default" 
-                onClick={handleCameraUpload}
-              >
-                拍照上传
-              </Button>
-              <Button 
-                icon={ocrLoading ? <Spin size="small" /> : <SearchOutlined />} 
-                type="primary" 
-                onClick={handleOCR}
-                loading={ocrLoading}
-              >
-                {ocrLoading ? '识别中...' : 'OCR识别'}
-              </Button>
-            </div>
+                <Upload.Dragger
+                  multiple={false}
+                  accept="image/*"
+                  listType="picture-card"
+                  beforeUpload={(file) => {
+                    const isImage = file.type.startsWith('image/');
+                    if (!isImage) {
+                      return Upload.LIST_IGNORE;
+                    }
+                    return true;
+                  }}
+                  style={{ maxWidth: '100%' }}
+                >
+                  <p className="ant-upload-drag-icon">
+                    <UploadOutlined style={{ fontSize: 48 }} />
+                  </p>
+                  <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
+                  <p className="ant-upload-hint">支持 JPG、PNG、GIF 等格式</p>
+                </Upload.Dragger>
+              </Form.Item>
+              <div style={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: '8px', justifyContent: 'center' }}>
+                <Button 
+                  icon={<CameraOutlined />} 
+                  type="default" 
+                  onClick={handleCameraUpload}
+                >
+                  拍照上传
+                </Button>
+                <Button 
+                  icon={ocrLoading ? <Spin size="small" /> : <SearchOutlined />} 
+                  type="primary" 
+                  onClick={handleOCR}
+                  loading={ocrLoading}
+                >
+                  {ocrLoading ? '识别中...' : 'OCR识别'}
+                </Button>
+              </div>
+            </Form>
           </Card>
           
           <Card title="ISBN搜索">
