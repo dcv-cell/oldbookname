@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, Layout, Button, Drawer } from 'antd';
 import { MenuOutlined, HomeOutlined, PlusOutlined, BookOutlined, ShareAltOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
+import './ResponsiveNav.css';
 
 const { Header, Sider, Content } = Layout;
 
 const ResponsiveNav = ({ children }) => {
   const [collapsed, setCollapsed] = useState(true);
   const [mobileVisible, setMobileVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const menuItems = [
     {
@@ -58,34 +70,38 @@ const ResponsiveNav = ({ children }) => {
         placement="left"
         onClose={() => setMobileVisible(false)}
         open={mobileVisible}
+        width={240}
       >
         <Menu
           mode="inline"
           selectedKeys={[currentKey]}
           items={menuItems}
           onClick={() => setMobileVisible(false)}
+          style={{ marginTop: 16 }}
         />
       </Drawer>
       
-      {/* 桌面端侧边菜单 */}
-      <Sider
-        width={200}
-        theme="light"
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        breakpoint="lg"
-        collapsedWidth="0"
-      >
-        <div style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)', borderRadius: '4px' }} />
-        <Menu
-          mode="inline"
-          selectedKeys={[currentKey]}
-          items={menuItems}
-        />
-      </Sider>
+      {/* 桌面端侧边菜单 - 仅在非移动端显示 */}
+      {!isMobile && (
+        <Sider
+          width={200}
+          theme="light"
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          breakpoint="md"
+          collapsedWidth="0"
+        >
+          <div style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)', borderRadius: '4px' }} />
+          <Menu
+            mode="inline"
+            selectedKeys={[currentKey]}
+            items={menuItems}
+          />
+        </Sider>
+      )}
       
-      <Content style={{ margin: '0 16px', padding: 24, background: '#fff', minHeight: 280 }}>
+      <Content style={{ margin: { xs: '0 8px', sm: '0 16px' }, padding: { xs: 16, sm: 24 }, background: '#fff', minHeight: 280 }}>
         {children}
       </Content>
     </Layout>
