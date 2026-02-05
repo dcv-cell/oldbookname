@@ -66,19 +66,22 @@ const AddBook = () => {
       logger.info('开始OCR识别流程');
       const ocrResult = await ocrService.processImage(coverImage);
       
-      // 填充识别到的基本信息
-      logger.info('OCR识别完成，填充基本信息', { title: ocrResult.title, author: ocrResult.author });
-      form.setFieldsValue({
-        title: ocrResult.title,
-        author: ocrResult.author
-      });
-      
-      // 提示用户这是模拟的OCR结果，需要手动确认和修改
-      message.info('OCR识别完成（模拟版本），请手动确认并修改图书信息');
-      
+      // 提取ISBN并搜索图书信息
+      if (ocrResult.isbn) {
+        logger.info('OCR识别成功，提取到ISBN', { isbn: ocrResult.isbn });
+        await handleSearchByISBN(ocrResult.isbn);
+      } else {
+        // 如果未提取到ISBN，只填充识别到的书名和作者
+        logger.info('OCR识别完成，未提取到ISBN，填充基本信息', { title: ocrResult.title, author: ocrResult.author });
+        form.setFieldsValue({
+          title: ocrResult.title,
+          author: ocrResult.author
+        });
+        message.success('OCR识别完成，已填充基本信息');
+      }
     } catch (error) {
       logger.error('OCR识别失败', { error: error.message });
-      message.error('OCR识别失败，请手动输入图书信息');
+      message.error('OCR识别失败，请重试');
     } finally {
       setOcrLoading(false);
     }
