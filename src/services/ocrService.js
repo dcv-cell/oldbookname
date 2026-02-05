@@ -13,14 +13,20 @@ class OCRService {
       this.isInitializing = true;
       try {
         logService.info('Initializing OCR worker...');
-        // 使用 Tesseract.js v5.1.0 正确的参数格式
-        this.worker = await createWorker('chi_sim+eng', 1, {
+        // 尝试使用 Tesseract.js v5.1.0
+        // 由于网络环境限制，可能无法加载 worker 脚本
+        this.worker = await createWorker({
           logger: (m) => logService.debug('OCR Progress:', m),
           errorHandler: (err) => logService.error('OCR Error:', { error: err })
         });
+        // 尝试加载语言包
+        await this.worker.loadLanguage('chi_sim+eng');
+        await this.worker.initialize('chi_sim+eng');
         logService.info('OCR worker initialized successfully');
       } catch (error) {
         logService.error('Failed to initialize OCR worker:', { error: error.message || error });
+        // 当网络环境无法加载 OCR 服务时，设置一个标志，稍后返回友好的错误信息
+        this.worker = null;
         throw new Error('OCR服务初始化失败');
       } finally {
         this.isInitializing = false;
