@@ -288,6 +288,38 @@ const AddBook = () => {
     await handleSearchByISBN(code);
   };
 
+  // 处理上传本地照片进行条形码识别
+  const handleBarcodeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      // 读取文件为base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const imageData = event.target.result;
+        logger.info('开始处理上传的条形码图片');
+        
+        // 使用 barcodeService 解码图片中的条形码
+        const code = await barcodeService.decodeImage(imageData);
+        
+        if (code) {
+          logger.info('本地照片条形码识别成功', { code });
+          // 填充ISBN并搜索图书信息
+          form.setFieldsValue({ isbn: code });
+          await handleSearchByISBN(code);
+        } else {
+          logger.info('未从本地照片中识别到条形码');
+          message.info('未识别到条形码，请确保照片清晰且包含完整的条形码');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      logger.error('处理本地照片失败', { error: error.message });
+      message.error('处理照片失败，请重试');
+    }
+  };
+
   // 初始化条形码扫描器
   useEffect(() => {
     if (barcodeVisible && barcodeVideoRef.current) {
@@ -369,12 +401,12 @@ const AddBook = () => {
             <Form form={form} layout="vertical">
               {/* ISBN搜索 */}
               <Row gutter={8} style={{ marginBottom: '16px' }}>
-                <Col span={16}>
+                <Col xs={24} sm={16} md={16}>
                   <Form.Item name="isbn">
                     <Input placeholder="输入ISBN进行搜索" />
                   </Form.Item>
                 </Col>
-                <Col span={6}>
+                <Col xs={12} sm={4} md={4}>
                   <Button 
                     icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
                     type="primary" 
@@ -392,7 +424,7 @@ const AddBook = () => {
                     {searchLoading ? '搜索中...' : '搜索'}
                   </Button>
                 </Col>
-                <Col span={2}>
+                <Col xs={12} sm={4} md={4}>
                   <Button 
                     icon={<CameraOutlined />} 
                     type="default" 
@@ -605,8 +637,30 @@ const AddBook = () => {
               </div>
             </div>
           </div>
+          
+          {/* 上传本地照片按钮 */}
+          <div style={{ marginTop: '16px' }}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleBarcodeUpload}
+              style={{ display: 'none' }}
+              id="barcode-upload"
+            />
+            <Button 
+              icon={<UploadOutlined />} 
+              type="default" 
+              onClick={() => document.getElementById('barcode-upload').click()}
+            >
+              上传本地照片
+            </Button>
+          </div>
+          
           <p style={{ marginTop: '16px', fontSize: '12px', color: '#999' }}>
             提示：将图书上的ISBN条形码对准扫描框，系统会自动识别并搜索图书信息
+          </p>
+          <p style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
+            或点击"上传本地照片"按钮，选择包含条形码的图片进行识别
           </p>
         </div>
       </Modal>
