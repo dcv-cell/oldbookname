@@ -100,6 +100,32 @@ const AddBook = () => {
     }
   };
 
+  // 根据书名和作者搜索图书信息
+  const handleSearchByTitleAndAuthor = async (title, author) => {
+    setSearchLoading(true);
+    try {
+      // 使用图书搜索服务获取详细信息
+      logger.info('开始根据书名和作者搜索图书信息', { title, author });
+      const books = await bookSearchService.searchByTitleAndAuthor(title, author);
+      
+      if (books && books.length > 0) {
+        // 填充第一本图书的信息
+        const bookInfo = books[0];
+        form.setFieldsValue(bookInfo);
+        logger.info('图书信息搜索成功', { title: bookInfo.title, author: bookInfo.author });
+        message.success(`找到 ${books.length} 本相关图书，已填充第一本`);
+      } else {
+        logger.info('未找到相关图书', { title, author });
+        message.info('未找到相关图书，请尝试其他关键词或手动输入');
+      }
+    } catch (error) {
+      logger.error('图书搜索失败', { title, author, error: error.message });
+      message.error('图书搜索失败，请手动输入');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   // 处理表单提交
   const handleSubmit = (values) => {
     setLoading(true);
@@ -274,9 +300,10 @@ const AddBook = () => {
             </Form>
           </Card>
           
-          <Card title="ISBN搜索">
+          <Card title="图书搜索">
             <Form form={form} layout="vertical">
-              <Row gutter={8}>
+              {/* ISBN搜索 */}
+              <Row gutter={8} style={{ marginBottom: '16px' }}>
                 <Col span={16}>
                   <Form.Item name="isbn">
                     <Input placeholder="输入ISBN进行搜索" />
@@ -297,10 +324,50 @@ const AddBook = () => {
                     loading={searchLoading}
                     block
                   >
-                    {searchLoading ? '搜索中...' : '搜索'}
+                    {searchLoading ? '搜索中...' : 'ISBN搜索'}
                   </Button>
                 </Col>
               </Row>
+              
+              {/* 书名和作者搜索 */}
+              <Row gutter={8} style={{ marginBottom: '16px' }}>
+                <Col span={10}>
+                  <Form.Item name="searchTitle">
+                    <Input placeholder="输入书名" />
+                  </Form.Item>
+                </Col>
+                <Col span={10}>
+                  <Form.Item name="searchAuthor">
+                    <Input placeholder="输入作者" />
+                  </Form.Item>
+                </Col>
+                <Col span={4}>
+                  <Button 
+                    icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
+                    type="default" 
+                    onClick={() => {
+                      const title = form.getFieldValue('searchTitle');
+                      const author = form.getFieldValue('searchAuthor');
+                      if (title || author) {
+                        handleSearchByTitleAndAuthor(title, author);
+                      } else {
+                        message.warning('请输入书名或作者');
+                      }
+                    }}
+                    loading={searchLoading}
+                    block
+                  >
+                    搜索
+                  </Button>
+                </Col>
+              </Row>
+              
+              {/* 搜索提示 */}
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+                <p>• 方法1：直接输入ISBN码进行搜索（推荐，最准确）</p>
+                <p>• 方法2：输入书名和作者进行搜索</p>
+                <p>• 方法3：上传图书封面后点击"OCR识别"按钮（模拟识别，需手动确认）</p>
+              </div>
             </Form>
           </Card>
         </Col>
