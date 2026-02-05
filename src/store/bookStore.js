@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import logger from '../services/logService';
 
 const useBookStore = create((set, get) => ({
   // 图书列表
@@ -11,33 +12,57 @@ const useBookStore = create((set, get) => ({
   error: null,
 
   // 添加图书
-  addBook: (book) => set((state) => ({
-    books: [...state.books, { ...book, id: Date.now().toString() }]
-  })),
+  addBook: (book) => set((state) => {
+    const newBook = { ...book, id: Date.now().toString() };
+    logger.info('添加图书', { title: newBook.title, id: newBook.id });
+    return {
+      books: [...state.books, newBook]
+    };
+  }),
 
   // 更新图书
-  updateBook: (bookId, updates) => set((state) => ({
-    books: state.books.map((book) =>
-      book.id === bookId ? { ...book, ...updates } : book
-    )
-  })),
+  updateBook: (bookId, updates) => set((state) => {
+    const book = state.books.find(b => b.id === bookId);
+    logger.info('更新图书', { id: bookId, title: book?.title, updates: Object.keys(updates) });
+    return {
+      books: state.books.map((book) =>
+        book.id === bookId ? { ...book, ...updates } : book
+      )
+    };
+  }),
 
   // 删除图书
-  deleteBook: (bookId) => set((state) => ({
-    books: state.books.filter((book) => book.id !== bookId)
-  })),
+  deleteBook: (bookId) => set((state) => {
+    const book = state.books.find(b => b.id === bookId);
+    logger.info('删除图书', { id: bookId, title: book?.title });
+    return {
+      books: state.books.filter((book) => book.id !== bookId)
+    };
+  }),
 
   // 设置当前编辑的图书
-  setCurrentBook: (book) => set({ currentBook: book }),
+  setCurrentBook: (book) => {
+    logger.debug('设置当前编辑的图书', { id: book?.id, title: book?.title });
+    set({ currentBook: book });
+  },
 
   // 清空当前编辑的图书
-  clearCurrentBook: () => set({ currentBook: null }),
+  clearCurrentBook: () => {
+    logger.debug('清空当前编辑的图书');
+    set({ currentBook: null });
+  },
 
   // 设置加载状态
-  setLoading: (loading) => set({ loading }),
+  setLoading: (loading) => {
+    logger.debug('设置加载状态', { loading });
+    set({ loading });
+  },
 
   // 设置错误信息
-  setError: (error) => set({ error }),
+  setError: (error) => {
+    logger.error('设置错误信息', { error });
+    set({ error });
+  },
 
   // 根据ID获取图书
   getBookById: (bookId) => get().books.find((book) => book.id === bookId),

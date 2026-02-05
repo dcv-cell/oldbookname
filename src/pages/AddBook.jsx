@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, Form, Input, Upload, Button, Row, Col, Typography, message, Spin, Modal } from 'antd';
 import { UploadOutlined, CameraOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import useBookStore from '../store/bookStore';
 import ocrService from '../services/ocrService';
 import bookSearchService from '../services/bookSearchService';
+import logger from '../services/logService';
 
 const { Title } = Typography;
 
@@ -19,6 +20,10 @@ const AddBook = () => {
   const [coverImage, setCoverImage] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
+  useEffect(() => {
+    logger.info('AddBook component loaded');
+  }, []);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -38,6 +43,7 @@ const AddBook = () => {
   // 处理OCR识别
   const handleOCR = async () => {
     if (!coverImage) {
+      logger.warn('OCR识别：未上传封面图片');
       message.warning('请先上传图书封面');
       return;
     }
@@ -45,14 +51,16 @@ const AddBook = () => {
     setOcrLoading(true);
     try {
       // 使用OCR服务识别图片中的文字
-      console.log('Starting OCR process...');
+      logger.info('开始OCR识别流程');
       const ocrResult = await ocrService.processImage(coverImage);
       
       // 提取ISBN并搜索图书信息
       if (ocrResult.isbn) {
+        logger.info('OCR识别成功，提取到ISBN', { isbn: ocrResult.isbn });
         await handleSearchByISBN(ocrResult.isbn);
       } else {
         // 如果未提取到ISBN，只填充识别到的书名和作者
+        logger.info('OCR识别完成，未提取到ISBN，填充基本信息', { title: ocrResult.title, author: ocrResult.author });
         form.setFieldsValue({
           title: ocrResult.title,
           author: ocrResult.author
@@ -60,7 +68,7 @@ const AddBook = () => {
         message.success('OCR识别完成，已填充基本信息');
       }
     } catch (error) {
-      console.error('OCR识别失败:', error);
+      logger.error('OCR识别失败', { error: error.message });
       message.error('OCR识别失败，请重试');
     } finally {
       setOcrLoading(false);
@@ -72,13 +80,15 @@ const AddBook = () => {
     setSearchLoading(true);
     try {
       // 使用图书搜索服务获取详细信息
+      logger.info('开始根据ISBN搜索图书信息', { isbn });
       const bookInfo = await bookSearchService.searchByISBN(isbn);
       
       // 填充表单字段
       form.setFieldsValue(bookInfo);
+      logger.info('图书信息搜索成功', { title: bookInfo.title, author: bookInfo.author });
       message.success('图书信息搜索成功');
     } catch (error) {
-      console.error('图书搜索失败:', error);
+      logger.error('图书搜索失败', { isbn, error: error.message });
       message.error('图书搜索失败，请手动输入');
     } finally {
       setSearchLoading(false);
@@ -106,16 +116,18 @@ const AddBook = () => {
         updatedAt: new Date().toISOString()
       };
       
+      logger.info('提交图书信息', { title: bookData.title, author: bookData.author });
       // 调用状态管理添加图书
       addBook(bookData);
       
+      logger.info('图书录入成功', { title: bookData.title });
       message.success('图书录入成功');
       
       // 重置表单
       form.resetFields();
       setCoverImage(null);
     } catch (error) {
-      console.error('图书录入失败:', error);
+      logger.error('图书录入失败', { error: error.message });
       message.error('图书录入失败，请重试');
     } finally {
       setLoading(false);
@@ -124,30 +136,35 @@ const AddBook = () => {
 
   // 处理拍照上传
   const handleCameraUpload = () => {
+    logger.info('打开拍照上传模态框');
     setCameraVisible(true);
   };
 
   // 开始摄像头
   const startCamera = () => {
+    logger.info('开始摄像头');
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             videoRef.current.play();
+            logger.info('摄像头启动成功');
           }
         })
         .catch(err => {
-          console.error('无法访问摄像头:', err);
+          logger.error('无法访问摄像头', { error: err.message });
           message.error('无法访问摄像头，请检查设备权限');
         });
     } else {
+      logger.warn('浏览器不支持摄像头功能');
       message.error('浏览器不支持摄像头功能');
     }
   };
 
   // 拍照
   const capturePhoto = () => {
+    logger.info('开始拍照');
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -167,14 +184,20 @@ const AddBook = () => {
       const imageData = canvas.toDataURL('image/jpeg');
       setCoverImage(imageData);
       setCameraVisible(false);
+      logger.info('拍照成功，已设置封面图片');
       message.success('拍照成功');
+    } else {
+      logger.error('拍照失败：视频或画布元素未找到');
+      message.error('拍照失败，请重试');
     }
   };
 
   // 关闭摄像头
   const closeCamera = () => {
+    logger.debug('关闭摄像头');
     if (videoRef.current && videoRef.current.srcObject) {
       videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      logger.info('摄像头已停止');
     }
     setCameraVisible(false);
   };
