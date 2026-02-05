@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, Form, Input, Upload, Button, Row, Col, Typography, message, Spin } from 'antd';
+import React, { useState, useRef } from 'react';
+import { Card, Form, Input, Upload, Button, Row, Col, Typography, message, Spin, Modal } from 'antd';
 import { UploadOutlined, CameraOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import useBookStore from '../store/bookStore';
@@ -13,9 +13,12 @@ const AddBook = () => {
   const [loading, setLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [cameraVisible, setCameraVisible] = useState(false);
   const addBook = useBookStore((state) => state.addBook);
 
   const [coverImage, setCoverImage] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -42,6 +45,7 @@ const AddBook = () => {
     setOcrLoading(true);
     try {
       // 使用OCR服务识别图片中的文字
+      console.log('Starting OCR process...');
       const ocrResult = await ocrService.processImage(coverImage);
       
       // 提取ISBN并搜索图书信息
@@ -118,11 +122,68 @@ const AddBook = () => {
     }
   };
 
+  // 处理拍照上传
+  const handleCameraUpload = () => {
+    setCameraVisible(true);
+  };
+
+  // 开始摄像头
+  const startCamera = () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play();
+          }
+        })
+        .catch(err => {
+          console.error('无法访问摄像头:', err);
+          message.error('无法访问摄像头，请检查设备权限');
+        });
+    } else {
+      message.error('浏览器不支持摄像头功能');
+    }
+  };
+
+  // 拍照
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // 停止摄像头
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+      
+      // 转换为base64
+      const imageData = canvas.toDataURL('image/jpeg');
+      setCoverImage(imageData);
+      setCameraVisible(false);
+      message.success('拍照成功');
+    }
+  };
+
+  // 关闭摄像头
+  const closeCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    }
+    setCameraVisible(false);
+  };
+
   return (
     <div>
-      <Title level={2} style={{ marginBottom: '24px' }}>图书录入</Title>
+      <Title level={2} style={{ marginBottom: '24px', textAlign: 'center' }}>图书录入</Title>
       
-      <Row gutter={16}>
+      <Row gutter={[16, 24]}>
         <Col xs={24} lg={12}>
           <Card title="封面上传" style={{ marginBottom: '16px' }}>
             <Form.Item
@@ -142,6 +203,7 @@ const AddBook = () => {
                   }
                   return true;
                 }}
+                style={{ maxWidth: '100%' }}
               >
                 <p className="ant-upload-drag-icon">
                   <UploadOutlined style={{ fontSize: 48 }} />
@@ -150,8 +212,14 @@ const AddBook = () => {
                 <p className="ant-upload-hint">支持 JPG、PNG、GIF 等格式</p>
               </Upload.Dragger>
             </Form.Item>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-              <Button icon={<CameraOutlined />} disabled={true}>拍照上传</Button>
+            <div style={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: '8px', justifyContent: 'center' }}>
+              <Button 
+                icon={<CameraOutlined />} 
+                type="default" 
+                onClick={handleCameraUpload}
+              >
+                拍照上传
+              </Button>
               <Button 
                 icon={ocrLoading ? <Spin size="small" /> : <SearchOutlined />} 
                 type="primary" 
@@ -280,6 +348,29 @@ const AddBook = () => {
           </Card>
         </Col>
       </Row>
+      
+      {/* 拍照上传模态框 */}
+      <Modal
+        title="拍照上传"
+        open={cameraVisible}
+        onCancel={closeCamera}
+        footer={[
+          <Button key="cancel" onClick={closeCamera}>取消</Button>,
+          <Button key="submit" type="primary" onClick={capturePhoto}>拍照</Button>
+        ]}
+        width={{ xs: '90%', sm: 500 }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <Button type="primary" onClick={startCamera}>开始摄像头</Button>
+          </div>
+          <video
+            ref={videoRef}
+            style={{ width: '100%', maxWidth: '400px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+          />
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+        </div>
+      </Modal>
     </div>
   );
 };

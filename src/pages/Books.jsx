@@ -132,7 +132,7 @@ const Books = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: '24px' }}>图书展示</h2>
+      <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>图书展示</h2>
       
       <Card style={{ marginBottom: '24px' }}>
         <Row gutter={[8, 16]} align="middle">
@@ -145,6 +145,7 @@ const Books = () => {
               onSearch={value => setSearchText(value)}
               onChange={(e) => setSearchText(e.target.value)}
               value={searchText}
+              style={{ width: '100%' }}
             />
           </Col>
           <Col xs={24} md={8}>
@@ -185,7 +186,7 @@ const Books = () => {
       
       {/* 书单生成按钮 */}
       {selectedBooks.length > 0 && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '16px', textAlign: 'center' }}>
           <Button 
             type="primary" 
             icon={<ExportOutlined />} 
@@ -203,7 +204,7 @@ const Books = () => {
               hoverable
               cover={
                 <div style={{ 
-                  height: '300px', 
+                  height: { xs: '200px', sm: '250px', md: '300px' }, 
                   overflow: 'hidden', 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -265,6 +266,7 @@ const Books = () => {
           total={filteredBooks.length}
           onChange={handlePageChange}
           showSizeChanger={false}
+          responsive
         />
       </div>
       
@@ -275,11 +277,11 @@ const Books = () => {
           visible={isModalVisible}
           onCancel={handleModalCancel}
           footer={null}
-          width={800}
+          width={{ xs: '90%', sm: 800 }}
         >
-          <Row gutter={24}>
-            <Col span={8}>
-              <div style={{ height: '400px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5' }}>
+          <Row gutter={[16, 24]}>
+            <Col xs={24} md={8}>
+              <div style={{ height: { xs: '200px', md: '400px' }, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5' }}>
                 <img
                   alt={selectedBook.title}
                   src={selectedBook.cover || 'https://via.placeholder.com/200x300?text=No+Cover'}
@@ -287,7 +289,7 @@ const Books = () => {
                 />
               </div>
             </Col>
-            <Col span={16}>
+            <Col xs={24} md={16}>
               <h3>{selectedBook.title}</h3>
               <p style={{ color: '#999', marginBottom: '24px' }}>作者：{selectedBook.author}</p>
               
@@ -338,7 +340,7 @@ const Books = () => {
         placement="right"
         onClose={handleBookshelfDrawerClose}
         open={isBookshelfDrawerVisible}
-        width={400}
+        width={{ xs: '90%', sm: 400 }}
       >
         <div style={{ padding: '16px 0' }}>
           <h4>已选择 {selectedBooks.length} 本图书</h4>

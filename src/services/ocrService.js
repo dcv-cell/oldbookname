@@ -7,18 +7,27 @@ class OCRService {
 
   async init() {
     if (!this.worker) {
-      this.worker = await createWorker('chi_sim+eng', 1, {
-        logger: (m) => console.log('OCR Progress:', m),
-        errorHandler: (err) => console.error('OCR Error:', err)
-      });
+      try {
+        console.log('Initializing OCR worker...');
+        this.worker = await createWorker('chi_sim+eng', 1, {
+          logger: (m) => console.log('OCR Progress:', m),
+          errorHandler: (err) => console.error('OCR Error:', err)
+        });
+        console.log('OCR worker initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize OCR worker:', error);
+        throw new Error('OCR服务初始化失败');
+      }
     }
   }
 
   async recognizeImage(image) {
     try {
+      console.log('Recognizing image...');
       await this.init();
       
       const { data: { text } } = await this.worker.recognize(image);
+      console.log('OCR result:', text);
       return text;
     } catch (error) {
       console.error('OCR Recognition Error:', error);
@@ -62,8 +71,11 @@ class OCRService {
 
   async processImage(image) {
     try {
+      console.log('Processing image for OCR...');
       const text = await this.recognizeImage(image);
-      return this.extractBookInfoFromText(text);
+      const bookInfo = this.extractBookInfoFromText(text);
+      console.log('Extracted book info:', bookInfo);
+      return bookInfo;
     } catch (error) {
       console.error('Image Processing Error:', error);
       throw error;
@@ -72,8 +84,13 @@ class OCRService {
 
   async destroy() {
     if (this.worker) {
-      await this.worker.terminate();
-      this.worker = null;
+      try {
+        await this.worker.terminate();
+        this.worker = null;
+        console.log('OCR worker destroyed successfully');
+      } catch (error) {
+        console.error('Failed to destroy OCR worker:', error);
+      }
     }
   }
 }
