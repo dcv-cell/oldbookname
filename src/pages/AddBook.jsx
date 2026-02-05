@@ -25,6 +25,14 @@ const AddBook = () => {
     logger.info('AddBook component loaded');
   }, []);
 
+  // 当摄像头模态框打开时自动启动摄像头
+  useEffect(() => {
+    if (cameraVisible) {
+      logger.info('摄像头模态框已打开，准备启动摄像头');
+      startCamera();
+    }
+  }, [cameraVisible]);
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;

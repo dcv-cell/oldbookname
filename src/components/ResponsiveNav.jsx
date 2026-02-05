@@ -101,7 +101,7 @@ const ResponsiveNav = ({ children }) => {
         </Sider>
       )}
       
-      <Content style={{ margin: { xs: '0 8px', sm: '0 16px' }, padding: { xs: 16, sm: 24 }, background: '#fff', minHeight: 280 }}>
+      <Content style={{ margin: '0 16px', padding: 24, background: '#fff', minHeight: 280 }}>
         {children}
       </Content>
     </Layout>

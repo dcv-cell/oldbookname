@@ -4,10 +4,12 @@ import logService from './logService';
 class OCRService {
   constructor() {
     this.worker = null;
+    this.isInitializing = false;
   }
 
   async init() {
-    if (!this.worker) {
+    if (!this.worker && !this.isInitializing) {
+      this.isInitializing = true;
       try {
         logService.info('Initializing OCR worker...');
         this.worker = await createWorker('chi_sim+eng', 1, {
@@ -18,6 +20,8 @@ class OCRService {
       } catch (error) {
         logService.error('Failed to initialize OCR worker:', { error: error.message });
         throw new Error('OCR服务初始化失败');
+      } finally {
+        this.isInitializing = false;
       }
     }
   }
