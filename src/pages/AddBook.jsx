@@ -144,7 +144,7 @@ const AddBook = () => {
   const startCamera = () => {
     logger.info('开始摄像头');
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
         .then(stream => {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -153,8 +153,21 @@ const AddBook = () => {
           }
         })
         .catch(err => {
-          logger.error('无法访问摄像头', { error: err.message });
-          message.error('无法访问摄像头，请检查设备权限');
+          logger.error('无法访问后置摄像头，尝试使用前置摄像头', { error: err.message });
+          // 如果后置摄像头不可用，尝试使用前置摄像头
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+            .then(stream => {
+              if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play();
+                logger.info('前置摄像头启动成功');
+                message.info('后置摄像头不可用，已切换到前置摄像头');
+              }
+            })
+            .catch(err2 => {
+              logger.error('无法访问摄像头', { error: err2.message });
+              message.error('无法访问摄像头，请检查设备权限');
+            });
         });
     } else {
       logger.warn('浏览器不支持摄像头功能');

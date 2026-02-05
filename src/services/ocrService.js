@@ -94,7 +94,7 @@ class OCRService {
     try {
       logService.info('Processing image for OCR...');
       const text = await this.recognizeImage(image);
-      const bookInfo = this.extractBookInfoFromText(text);
+      const bookInfo = await this.extractBookInfoFromText(text);
       logService.info('Image processing completed successfully');
       return bookInfo;
     } catch (error) {
