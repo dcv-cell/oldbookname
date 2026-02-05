@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import useBookStore from '../store/bookStore';
 import ocrService from '../services/ocrService';
 import bookSearchService from '../services/bookSearchService';
+import barcodeService from '../services/barcodeService';
 import logger from '../services/logService';
 
 const { Title } = Typography;
@@ -20,6 +21,9 @@ const AddBook = () => {
   const [coverImage, setCoverImage] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const barcodeVideoRef = useRef(null);
+  const [barcodeVisible, setBarcodeVisible] = useState(false);
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
 
   useEffect(() => {
     logger.info('AddBook component loaded');
@@ -246,6 +250,57 @@ const AddBook = () => {
     setCameraVisible(false);
   };
 
+  // 打开条形码扫描模态框
+  const handleBarcodeScan = () => {
+    logger.info('打开条形码扫描模态框');
+    setBarcodeVisible(true);
+  };
+
+  // 关闭条形码扫描模态框
+  const closeBarcodeScanner = () => {
+    logger.debug('关闭条形码扫描模态框');
+    setBarcodeVisible(false);
+    setBarcodeScanning(false);
+    // 销毁扫描器
+    barcodeService.destroy();
+  };
+
+  // 处理条形码扫描结果
+  const handleBarcodeDetected = async (code) => {
+    logger.info('条形码扫描成功，开始搜索图书信息', { code });
+    // 停止扫描
+    barcodeService.stopScanning();
+    setBarcodeScanning(false);
+    // 关闭模态框
+    setBarcodeVisible(false);
+    // 填充ISBN并搜索图书信息
+    form.setFieldsValue({ isbn: code });
+    await handleSearchByISBN(code);
+  };
+
+  // 初始化条形码扫描器
+  useEffect(() => {
+    if (barcodeVisible && barcodeVideoRef.current) {
+      logger.info('初始化条形码扫描器');
+      setBarcodeScanning(true);
+      barcodeService.initScanner(
+        barcodeVideoRef.current,
+        handleBarcodeDetected,
+        (error) => {
+          logger.error('条形码扫描器初始化失败', { error: error.message });
+          message.error('条形码扫描器初始化失败，请重试');
+          setBarcodeScanning(false);
+        }
+      );
+    }
+    // 清理函数
+    return () => {
+      if (!barcodeVisible) {
+        barcodeService.destroy();
+      }
+    };
+  }, [barcodeVisible]);
+
   return (
     <div>
       <Title level={2} style={{ marginBottom: '24px', textAlign: 'center' }}>图书录入</Title>
@@ -309,7 +364,7 @@ const AddBook = () => {
                     <Input placeholder="输入ISBN进行搜索" />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col span={6}>
                   <Button 
                     icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
                     type="primary" 
@@ -324,7 +379,17 @@ const AddBook = () => {
                     loading={searchLoading}
                     block
                   >
-                    {searchLoading ? '搜索中...' : 'ISBN搜索'}
+                    {searchLoading ? '搜索中...' : '搜索'}
+                  </Button>
+                </Col>
+                <Col span={2}>
+                  <Button 
+                    icon={<CameraOutlined />} 
+                    type="default" 
+                    onClick={handleBarcodeScan}
+                    block
+                  >
+                    扫码
                   </Button>
                 </Col>
               </Row>
@@ -481,6 +546,58 @@ const AddBook = () => {
             style={{ width: '100%', maxWidth: '400px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
           />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
+        </div>
+      </Modal>
+      
+      {/* 条形码扫描模态框 */}
+      <Modal
+        title="条形码扫描"
+        open={barcodeVisible}
+        onCancel={closeBarcodeScanner}
+        footer={[
+          <Button key="cancel" onClick={closeBarcodeScanner}>取消</Button>
+        ]}
+        width={{ xs: '90%', sm: 500 }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <Spin spinning={barcodeScanning} tip="正在扫描..." />
+          </div>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <video
+              ref={barcodeVideoRef}
+              style={{ width: '100%', maxWidth: '400px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            />
+            {/* 扫描框提示 */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '200px',
+              height: '200px',
+              border: '2px solid #1890ff',
+              borderRadius: '4px',
+              pointerEvents: 'none'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '-2px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#1890ff',
+                color: '#fff',
+                padding: '2px 8px',
+                fontSize: '12px',
+                borderRadius: '2px'
+              }}>
+                请对准条形码
+              </div>
+            </div>
+          </div>
+          <p style={{ marginTop: '16px', fontSize: '12px', color: '#999' }}>
+            提示：将图书上的ISBN条形码对准扫描框，系统会自动识别并搜索图书信息
+          </p>
         </div>
       </Modal>
     </div>
