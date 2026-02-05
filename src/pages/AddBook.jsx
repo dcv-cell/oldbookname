@@ -276,31 +276,33 @@ const AddBook = () => {
           </Card>
           
           <Card title="ISBN搜索">
-            <Row gutter={8}>
-              <Col span={16}>
-                <Form.Item name="isbn">
-                  <Input placeholder="输入ISBN进行搜索" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Button 
-                  icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
-                  type="primary" 
-                  onClick={() => {
-                    const isbn = form.getFieldValue('isbn');
-                    if (isbn) {
-                      handleSearchByISBN(isbn);
-                    } else {
-                      message.warning('请输入ISBN');
-                    }
-                  }}
-                  loading={searchLoading}
-                  block
-                >
-                  {searchLoading ? '搜索中...' : '搜索'}
-                </Button>
-              </Col>
-            </Row>
+            <Form form={form} layout="vertical">
+              <Row gutter={8}>
+                <Col span={16}>
+                  <Form.Item name="isbn">
+                    <Input placeholder="输入ISBN进行搜索" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Button 
+                    icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
+                    type="primary" 
+                    onClick={() => {
+                      const isbn = form.getFieldValue('isbn');
+                      if (isbn) {
+                        handleSearchByISBN(isbn);
+                      } else {
+                        message.warning('请输入ISBN');
+                      }
+                    }}
+                    loading={searchLoading}
+                    block
+                  >
+                    {searchLoading ? '搜索中...' : '搜索'}
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
           </Card>
         </Col>
         
