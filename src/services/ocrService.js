@@ -105,7 +105,15 @@ class OCRService {
       return bookInfo;
     } catch (error) {
       logService.error('Image Processing Error:', { error: error.message });
-      throw error;
+      // 当 OCR 服务加载失败时，返回一个友好的错误消息，而不是让整个功能崩溃
+      // 同时建议用户使用条形码扫描功能
+      return {
+        title: '',
+        author: '',
+        isbn: '',
+        rawText: 'OCR服务暂时不可用，请尝试使用条形码扫描功能或手动输入图书信息',
+        error: error.message
+      };
     }
   }
 

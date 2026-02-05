@@ -88,7 +88,8 @@ class BarcodeService {
     this.stopScanning();
     try {
       Quagga.offDetected();
-      Quagga.destroy();
+      // Quagga.js 可能没有 destroy 方法，使用 stop 方法停止所有处理
+      Quagga.stop();
       logService.info('Barcode scanner destroyed');
     } catch (error) {
       logService.error('Failed to destroy scanner:', { error: error.message });

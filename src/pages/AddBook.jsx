@@ -66,6 +66,13 @@ const AddBook = () => {
       logger.info('开始OCR识别流程');
       const ocrResult = await ocrService.processImage(coverImage);
       
+      // 检查是否有错误
+      if (ocrResult.error) {
+        logger.warn('OCR服务暂时不可用', { error: ocrResult.error });
+        message.info('OCR服务暂时不可用，请尝试使用条形码扫描功能或手动输入图书信息');
+        return;
+      }
+      
       // 提取ISBN并搜索图书信息
       if (ocrResult.isbn) {
         logger.info('OCR识别成功，提取到ISBN', { isbn: ocrResult.isbn });
@@ -81,7 +88,7 @@ const AddBook = () => {
       }
     } catch (error) {
       logger.error('OCR识别失败', { error: error.message });
-      message.error('OCR识别失败，请重试');
+      message.error('OCR识别失败，请尝试使用条形码扫描功能或手动输入图书信息');
     } finally {
       setOcrLoading(false);
     }
