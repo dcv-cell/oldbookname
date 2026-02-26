@@ -49,9 +49,8 @@ const ManageBooks = () => {
   const categories = Array.from(new Set(books.map(book => book.category).filter(Boolean)));
 
   const statusMap = {
-    available: <Tag color="green">可借阅</Tag>,
-    borrowed: <Tag color="red">已借出</Tag>,
-    maintenance: <Tag color="orange">维护中</Tag>
+    available: <Tag color="green">未售</Tag>,
+    sold: <Tag color="red">已售</Tag>
   };
 
   const columns = [
@@ -182,9 +181,8 @@ const ManageBooks = () => {
               size="large"
             >
               <Option value="all">全部</Option>
-              <Option value="available">可借阅</Option>
-              <Option value="borrowed">已借出</Option>
-              <Option value="maintenance">维护中</Option>
+              <Option value="available">未售</Option>
+              <Option value="sold">已售</Option>
             </Select>
           </Col>
           <Col xs={24} style={{ marginBottom: '8px' }}>
@@ -268,9 +266,8 @@ const ManageBooks = () => {
           </Form.Item>
           <Form.Item name="status" label="状态">
             <Select size="large">
-              <Option value="available">可借阅</Option>
-              <Option value="borrowed">已借出</Option>
-              <Option value="maintenance">维护中</Option>
+              <Option value="available">未售</Option>
+              <Option value="sold">已售</Option>
             </Select>
           </Form.Item>
         </Form>

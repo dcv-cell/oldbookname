@@ -371,7 +371,7 @@ class AIImageService {
             },
             {
               type: "input_text",
-              text: "你是图书信息识别专家。请从这个图书封面图像中提取完整的图书信息，包括书名、作者、出版社、ISBN号码、出版日期、价格等。请以JSON格式返回，字段包括：title、author、publisher、isbn、publishDate、price。如果某些信息无法识别，请保持对应字段为空字符串。"
+              text: "你是图书信息识别专家。请从这个图书封面图像中提取完整的图书信息，包括书名、作者、出版社、ISBN号码、出版日期、价格等。同时请分析图书的适合观看年龄，并给出合适的年龄范围。请以JSON格式返回，字段包括：title、author、publisher、isbn、publishDate、price、viewingAge。如果某些信息无法识别，请保持对应字段为空字符串。"
             }
           ]
         }

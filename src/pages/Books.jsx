@@ -51,9 +51,8 @@ const Books = () => {
   const categories = Array.from(new Set(books.map(book => book.category).filter(Boolean)));
 
   const statusMap = {
-    available: <Tag color="green">可借阅</Tag>,
-    borrowed: <Tag color="red">已借出</Tag>,
-    maintenance: <Tag color="orange">维护中</Tag>
+    available: <Tag color="green">未售</Tag>,
+    sold: <Tag color="red">已售</Tag>
   };
 
   const showBookDetail = (book) => {
@@ -164,17 +163,15 @@ const Books = () => {
           </Col>
           <Col xs={24} style={{ marginBottom: '8px' }}>
             <Select 
-              placeholder="按状态筛选" 
-              style={{ width: '100%' }} 
-              value={statusFilter}
-              onChange={setStatusFilter}
-              size="large"
-            >
-              <Option value="all">全部</Option>
-              <Option value="available">可借阅</Option>
-              <Option value="borrowed">已借出</Option>
-              <Option value="maintenance">维护中</Option>
-            </Select>
+                  placeholder="按状态筛选" 
+                  style={{ width: '100%' }} 
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                >
+                  <Option value="all">全部</Option>
+                  <Option value="available">未售</Option>
+                  <Option value="sold">已售</Option>
+                </Select>
           </Col>
         </Row>
       </Card>
@@ -307,16 +304,11 @@ const Books = () => {
             <div style={{ marginBottom: '12px', fontSize: '14px' }}>
               <strong>存放位置：</strong>{selectedBook.location}
             </div>
-            <div style={{ marginBottom: '16px', fontSize: '14px' }}>
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
               <strong>状态：</strong>{statusMap[selectedBook.status]}
             </div>
             <div style={{ marginBottom: '16px', fontSize: '14px' }}>
-              <strong>标签：</strong>
-              <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {selectedBook.tags.map((tag) => (
-                  <Tag key={tag} size="small">{tag}</Tag>
-                ))}
-              </div>
+              <strong>观看年龄：</strong>{selectedBook.viewingAge || '未设置'}
             </div>
             
             <div style={{ fontSize: '14px' }}>
