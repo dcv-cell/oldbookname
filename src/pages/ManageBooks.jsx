@@ -62,45 +62,18 @@ const ManageBooks = () => {
       ellipsis: true,
       render: (text, record) => (
         <div>
-          <div>{text}</div>
+          <div style={{ fontWeight: 'bold' }}>{text}</div>
           <div style={{ fontSize: '12px', color: '#999' }}>{record.author}</div>
         </div>
-      )
-    },
-    {
-      title: '出版社',
-      dataIndex: 'publisher',
-      key: 'publisher',
-      ellipsis: true
-    },
-    {
-      title: 'ISBN',
-      dataIndex: 'isbn',
-      key: 'isbn',
-      ellipsis: true
-    },
-    {
-      title: '出版日期',
-      dataIndex: 'publishDate',
-      key: 'publishDate'
+      ),
+      responsive: ['sm']
     },
     {
       title: '价格',
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `¥${price}`
-    },
-    {
-      title: '标签',
-      dataIndex: 'tags',
-      key: 'tags',
-      render: (tags) => (
-        <Space size="small">
-          {tags.map((tag) => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-        </Space>
-      )
+      render: (price) => `¥${price}`,
+      responsive: ['sm']
     },
     {
       title: '状态',
@@ -109,19 +82,14 @@ const ManageBooks = () => {
       render: (status) => statusMap[status]
     },
     {
-      title: '存放位置',
-      dataIndex: 'location',
-      key: 'location'
-    },
-    {
       title: '操作',
       key: 'action',
       render: (_, record) => (
         <Space size="small">
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} size="small">
             编辑
           </Button>
-          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)}>
+          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} size="small">
             删除
           </Button>
         </Space>
@@ -188,58 +156,57 @@ const ManageBooks = () => {
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: '24px' }}>图书管理</h2>
+    <div style={{ padding: '16px' }}>
+      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>图书管理</h2>
       
-      <Card style={{ marginBottom: '16px' }}>
-        <Row gutter={[8, 16]} align="middle">
-          <Col xs={24} md={16}>
-            <Search
-              placeholder="搜索图书"
-              allowClear
-              enterButton={<SearchOutlined />}
+      <Card style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <Search
+            placeholder="搜索图书、作者或出版社"
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="large"
+            onSearch={value => setSearchText(value)}
+            onChange={(e) => setSearchText(e.target.value)}
+            value={searchText}
+            style={{ width: '100%' }}
+          />
+        </div>
+        <Row gutter={8}>
+          <Col xs={24} style={{ marginBottom: '8px' }}>
+            <Select 
+              placeholder="按状态筛选" 
+              style={{ width: '100%' }} 
+              value={statusFilter}
+              onChange={setStatusFilter}
               size="large"
-              onSearch={value => setSearchText(value)}
-              onChange={(e) => setSearchText(e.target.value)}
-              value={searchText}
-            />
+            >
+              <Option value="all">全部</Option>
+              <Option value="available">可借阅</Option>
+              <Option value="borrowed">已借出</Option>
+              <Option value="maintenance">维护中</Option>
+            </Select>
           </Col>
-          <Col xs={24} md={8}>
-            <Row gutter={8}>
-              <Col xs={24} sm={8}>
-                <Select 
-                  placeholder="按状态筛选" 
-                  style={{ width: '100%' }} 
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                >
-                  <Option value="all">全部</Option>
-                  <Option value="available">可借阅</Option>
-                  <Option value="borrowed">已借出</Option>
-                  <Option value="maintenance">维护中</Option>
-                </Select>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Select 
-                  placeholder="按分类筛选" 
-                  style={{ width: '100%' }} 
-                  value={categoryFilter}
-                  onChange={setCategoryFilter}
-                >
-                  <Option value="all">全部</Option>
-                  {categories.map(category => (
-                    <Option key={category} value={category}>{category}</Option>
-                  ))}
-                </Select>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Link to="/add-book">
-                  <Button type="primary" icon={<PlusOutlined />} block>
-                    新增图书
-                  </Button>
-                </Link>
-              </Col>
-            </Row>
+          <Col xs={24} style={{ marginBottom: '8px' }}>
+            <Select 
+              placeholder="按分类筛选" 
+              style={{ width: '100%' }} 
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              size="large"
+            >
+              <Option value="all">全部</Option>
+              {categories.map(category => (
+                <Option key={category} value={category}>{category}</Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24}>
+            <Link to="/add-book">
+              <Button type="primary" icon={<PlusOutlined />} block size="large">
+                新增图书
+              </Button>
+            </Link>
           </Col>
         </Row>
       </Card>
@@ -250,10 +217,10 @@ const ManageBooks = () => {
           columns={columns}
           dataSource={filteredBooks}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, size: 'large' }}
           locale={{ emptyText: '暂无图书数据' }}
           scroll={{ x: 'max-content' }}
-          size="middle"
+          size="small"
         />
       </Card>
       
@@ -262,50 +229,45 @@ const ManageBooks = () => {
         visible={isModalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
-        width={800}
+        width="95%"
+        style={{ maxWidth: '500px' }}
       >
         <Form
           form={form}
           layout="vertical"
         >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="title" label="书名">
-                <Input />
-              </Form.Item>
-              <Form.Item name="author" label="作者">
-                <Input />
-              </Form.Item>
-              <Form.Item name="publisher" label="出版社">
-                <Input />
-              </Form.Item>
-              <Form.Item name="isbn" label="ISBN">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="publishDate" label="出版日期">
-                <Input placeholder="YYYY-MM-DD" />
-              </Form.Item>
-              <Form.Item name="price" label="价格">
-                <Input prefix="¥" />
-              </Form.Item>
-              <Form.Item name="category" label="分类">
-                <Input />
-              </Form.Item>
-              <Form.Item name="location" label="存放位置">
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item name="title" label="书名">
+            <Input size="large" />
+          </Form.Item>
+          <Form.Item name="author" label="作者">
+            <Input size="large" />
+          </Form.Item>
+          <Form.Item name="publisher" label="出版社">
+            <Input size="large" />
+          </Form.Item>
+          <Form.Item name="isbn" label="ISBN">
+            <Input size="large" />
+          </Form.Item>
+          <Form.Item name="publishDate" label="出版日期">
+            <Input placeholder="YYYY-MM-DD" size="large" />
+          </Form.Item>
+          <Form.Item name="price" label="价格">
+            <Input prefix="¥" size="large" />
+          </Form.Item>
+          <Form.Item name="category" label="分类">
+            <Input size="large" />
+          </Form.Item>
+          <Form.Item name="location" label="存放位置">
+            <Input size="large" />
+          </Form.Item>
           <Form.Item name="tags" label="标签">
-            <Input placeholder="多个标签用逗号分隔" />
+            <Input placeholder="多个标签用逗号分隔" size="large" />
           </Form.Item>
           <Form.Item name="description" label="描述">
-            <Input.TextArea rows={4} />
+            <Input.TextArea rows={3} size="large" />
           </Form.Item>
           <Form.Item name="status" label="状态">
-            <Select>
+            <Select size="large">
               <Option value="available">可借阅</Option>
               <Option value="borrowed">已借出</Option>
               <Option value="maintenance">维护中</Option>

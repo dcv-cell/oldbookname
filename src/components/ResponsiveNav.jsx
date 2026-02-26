@@ -24,34 +24,29 @@ const ResponsiveNav = ({ children }) => {
 
   const menuItems = [
     {
-      key: '/',
-      icon: <HomeOutlined />,
-      label: <Link to="/">首页</Link>
-    },
-    {
       key: '/add-book',
       icon: <PlusOutlined />,
-      label: <Link to="/add-book">图书录入</Link>
+      label: <Link to="/add-book">录入</Link>
     },
     {
       key: '/manage-books',
       icon: <BookOutlined />,
-      label: <Link to="/manage-books">图书管理</Link>
+      label: <Link to="/manage-books">管理</Link>
     },
     {
       key: '/books',
       icon: <ShareAltOutlined />,
-      label: <Link to="/books">图书展示</Link>
+      label: <Link to="/books">展示</Link>
     },
     {
       key: '/locations',
       icon: <EnvironmentOutlined />,
-      label: <Link to="/locations">存放管理</Link>
+      label: <Link to="/locations">位置</Link>
     },
     {
       key: '/logs',
       icon: <FileTextOutlined />,
-      label: <Link to="/logs">系统日志</Link>
+      label: <Link to="/logs">日志</Link>
     }
   ];
 

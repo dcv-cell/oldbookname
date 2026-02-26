@@ -131,80 +131,77 @@ const Books = () => {
   const paginatedBooks = filteredBooks.slice(startIndex, endIndex);
 
   return (
-    <div>
-      <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>图书展示</h2>
+    <div style={{ padding: '16px' }}>
+      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>图书展示</h2>
       
-      <Card style={{ marginBottom: '24px' }}>
-        <Row gutter={[8, 16]} align="middle">
-          <Col xs={24} md={16}>
-            <Search
-              placeholder="搜索图书、作者或出版社"
-              allowClear
-              enterButton={<SearchOutlined />}
+      <Card style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <Search
+            placeholder="搜索图书、作者或出版社"
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="large"
+            onSearch={value => setSearchText(value)}
+            onChange={(e) => setSearchText(e.target.value)}
+            value={searchText}
+            style={{ width: '100%' }}
+          />
+        </div>
+        <Row gutter={8}>
+          <Col xs={24} style={{ marginBottom: '8px' }}>
+            <Select 
+              placeholder="按分类筛选" 
+              style={{ width: '100%' }} 
+              value={categoryFilter}
+              onChange={setCategoryFilter}
               size="large"
-              onSearch={value => setSearchText(value)}
-              onChange={(e) => setSearchText(e.target.value)}
-              value={searchText}
-              style={{ width: '100%' }}
-            />
+            >
+              <Option value="all">全部</Option>
+              {categories.map(category => (
+                <Option key={category} value={category}>{category}</Option>
+              ))}
+            </Select>
           </Col>
-          <Col xs={24} md={8}>
-            <Row gutter={8}>
-              <Col xs={24} sm={8}>
-                <Select 
-                  placeholder="按分类筛选" 
-                  style={{ width: '100%' }} 
-                  value={categoryFilter}
-                  onChange={setCategoryFilter}
-                >
-                  <Option value="all">全部</Option>
-                  {categories.map(category => (
-                    <Option key={category} value={category}>{category}</Option>
-                  ))}
-                </Select>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Select 
-                  placeholder="按状态筛选" 
-                  style={{ width: '100%' }} 
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                >
-                  <Option value="all">全部</Option>
-                  <Option value="available">可借阅</Option>
-                  <Option value="borrowed">已借出</Option>
-                  <Option value="maintenance">维护中</Option>
-                </Select>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Button icon={<FilterOutlined />} block>高级筛选</Button>
-              </Col>
-            </Row>
+          <Col xs={24} style={{ marginBottom: '8px' }}>
+            <Select 
+              placeholder="按状态筛选" 
+              style={{ width: '100%' }} 
+              value={statusFilter}
+              onChange={setStatusFilter}
+              size="large"
+            >
+              <Option value="all">全部</Option>
+              <Option value="available">可借阅</Option>
+              <Option value="borrowed">已借出</Option>
+              <Option value="maintenance">维护中</Option>
+            </Select>
           </Col>
         </Row>
       </Card>
       
       {/* 书单生成按钮 */}
       {selectedBooks.length > 0 && (
-        <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+        <div style={{ marginBottom: '16px' }}>
           <Button 
             type="primary" 
             icon={<ExportOutlined />} 
             onClick={showBookshelfDrawer}
+            block
+            size="large"
           >
             生成书单 ({selectedBooks.length})
           </Button>
         </div>
       )}
       
-      <Row gutter={[16, 16]}>
+      <Row gutter={[12, 16]}>
         {paginatedBooks.map((book) => (
           <Col key={book.id} xs={24} sm={12} md={8} lg={6}>
             <Card
               hoverable
               cover={
                 <div style={{ 
-                  height: { xs: '200px', sm: '250px', md: '300px' }, 
+                  height: '180px', 
                   overflow: 'hidden', 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -236,15 +233,15 @@ const Books = () => {
                 </div>
               }
               actions={[
-                <Button type="text" icon={<EyeOutlined />} onClick={() => showBookDetail(book)}>
+                <Button type="text" icon={<EyeOutlined />} onClick={() => showBookDetail(book)} size="small">
                   详情
                 </Button>,
-                <Button type="text" icon={<ShareAltOutlined />} onClick={() => handleShare(book)}>
+                <Button type="text" icon={<ShareAltOutlined />} onClick={() => handleShare(book)} size="small">
                   分享
                 </Button>
               ]}
             >
-              <div style={{ height: '40px', overflow: 'hidden', marginBottom: '8px', fontWeight: 'bold' }}>{book.title}</div>
+              <div style={{ height: '40px', overflow: 'hidden', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>{book.title}</div>
               <div style={{ fontSize: '12px', color: '#999', marginBottom: '8px' }}>{book.author}</div>
               <div style={{ fontSize: '14px', color: '#1890ff', marginBottom: '8px' }}>¥{book.price}</div>
               <div style={{ marginBottom: '8px' }}>{statusMap[book.status]}</div>
@@ -259,7 +256,7 @@ const Books = () => {
         ))}
       </Row>
       
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
         <Pagination
           current={currentPage}
           pageSize={pageSize}
@@ -267,6 +264,7 @@ const Books = () => {
           onChange={handlePageChange}
           showSizeChanger={false}
           responsive
+          size="large"
         />
       </div>
       
@@ -277,96 +275,94 @@ const Books = () => {
           visible={isModalVisible}
           onCancel={handleModalCancel}
           footer={null}
-          width={{ xs: '90%', sm: 800 }}
+          width="95%"
+          style={{ maxWidth: '500px' }}
         >
-          <Row gutter={[16, 24]}>
-            <Col xs={24} md={8}>
-              <div style={{ height: { xs: '200px', md: '400px' }, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5' }}>
-                <img
-                  alt={selectedBook.title}
-                  src={selectedBook.cover || 'https://via.placeholder.com/200x300?text=No+Cover'}
-                  style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
-                />
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ height: '200px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5', marginBottom: '16px' }}>
+              <img
+                alt={selectedBook.title}
+                src={selectedBook.cover || 'https://via.placeholder.com/200x300?text=No+Cover'}
+                style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+              />
+            </div>
+            <h3 style={{ marginBottom: '12px' }}>{selectedBook.title}</h3>
+            <p style={{ color: '#999', marginBottom: '16px' }}>作者：{selectedBook.author}</p>
+            
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
+              <strong>出版社：</strong>{selectedBook.publisher}
+            </div>
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
+              <strong>ISBN：</strong>{selectedBook.isbn}
+            </div>
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
+              <strong>出版日期：</strong>{selectedBook.publishDate}
+            </div>
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
+              <strong>价格：</strong><span style={{ color: '#1890ff', fontSize: '16px' }}>¥{selectedBook.price}</span>
+            </div>
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
+              <strong>分类：</strong>{selectedBook.category}
+            </div>
+            <div style={{ marginBottom: '12px', fontSize: '14px' }}>
+              <strong>存放位置：</strong>{selectedBook.location}
+            </div>
+            <div style={{ marginBottom: '16px', fontSize: '14px' }}>
+              <strong>状态：</strong>{statusMap[selectedBook.status]}
+            </div>
+            <div style={{ marginBottom: '16px', fontSize: '14px' }}>
+              <strong>标签：</strong>
+              <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {selectedBook.tags.map((tag) => (
+                  <Tag key={tag} size="small">{tag}</Tag>
+                ))}
               </div>
-            </Col>
-            <Col xs={24} md={16}>
-              <h3>{selectedBook.title}</h3>
-              <p style={{ color: '#999', marginBottom: '24px' }}>作者：{selectedBook.author}</p>
-              
-              <div style={{ marginBottom: '16px' }}>
-                <strong>出版社：</strong>{selectedBook.publisher}
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <strong>ISBN：</strong>{selectedBook.isbn}
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <strong>出版日期：</strong>{selectedBook.publishDate}
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <strong>价格：</strong><span style={{ color: '#1890ff', fontSize: '18px' }}>¥{selectedBook.price}</span>
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <strong>分类：</strong>{selectedBook.category}
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <strong>存放位置：</strong>{selectedBook.location}
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <strong>状态：</strong>{statusMap[selectedBook.status]}
-              </div>
-              <div style={{ marginBottom: '24px' }}>
-                <strong>标签：</strong>
-                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {selectedBook.tags.map((tag) => (
-                    <Tag key={tag}>{tag}</Tag>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <strong>描述：</strong>
-                <p style={{ marginTop: '8px', lineHeight: '1.6' }}>
-                  {selectedBook.description || '暂无描述'}
-                </p>
-              </div>
-            </Col>
-          </Row>
+            </div>
+            
+            <div style={{ fontSize: '14px' }}>
+              <strong>描述：</strong>
+              <p style={{ marginTop: '8px', lineHeight: '1.6' }}>
+                {selectedBook.description || '暂无描述'}
+              </p>
+            </div>
+          </div>
         </Modal>
       )}
       
       {/* 书单生成抽屉 */}
       <Drawer
         title="生成书单"
-        placement="right"
+        placement="bottom"
         onClose={handleBookshelfDrawerClose}
         open={isBookshelfDrawerVisible}
-        width={{ xs: '90%', sm: 400 }}
+        width="100%"
+        style={{ maxHeight: '80%' }}
       >
-        <div style={{ padding: '16px 0' }}>
-          <h4>已选择 {selectedBooks.length} 本图书</h4>
-          <ul style={{ maxHeight: '300px', overflowY: 'auto', padding: '16px 0' }}>
+        <div style={{ padding: '16px' }}>
+          <h4 style={{ marginBottom: '16px' }}>已选择 {selectedBooks.length} 本图书</h4>
+          <ul style={{ maxHeight: '200px', overflowY: 'auto', padding: '16px 0', marginBottom: '16px' }}>
             {selectedBooks.map(bookId => {
               const book = books.find(b => b.id === bookId);
               return book ? (
-                <li key={bookId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                <li key={bookId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '4px', fontSize: '14px' }}>
                   {book.title}
                 </li>
               ) : null;
             })}
           </ul>
           
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <Input
               placeholder="请输入书单名称"
               value={bookshelfName}
               onChange={(e) => setBookshelfName(e.target.value)}
-              style={{ marginBottom: '16px' }}
+              size="large"
             />
           </div>
           
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button onClick={handleBookshelfDrawerClose} style={{ flex: 1 }}>取消</Button>
-            <Button type="primary" onClick={generateBookshelf} style={{ flex: 1 }}>生成书单</Button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button onClick={handleBookshelfDrawerClose} style={{ flex: 1 }} size="large">取消</Button>
+            <Button type="primary" onClick={generateBookshelf} style={{ flex: 1 }} size="large">生成书单</Button>
           </div>
         </div>
       </Drawer>

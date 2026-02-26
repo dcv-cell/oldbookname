@@ -290,220 +290,219 @@ const AddBook = () => {
 
 
   return (
-    <div>
+    <div style={{ padding: '16px' }}>
       <Title level={2} style={{ marginBottom: '24px', textAlign: 'center' }}>图书录入</Title>
       
-      <Row gutter={[16, 24]}>
-        <Col xs={24} lg={12}>
-          <Card title="封面上传" style={{ marginBottom: '16px' }}>
-            <Form form={form} layout="vertical">
-              <Form.Item
-                name="cover"
-                valuePropName="fileList"
-                getValueFromEvent={normFile}
-                rules={[{ required: true, message: '请上传图书封面' }]}
-              >
-                <Upload.Dragger
-                  multiple={false}
-                  accept="image/*"
-                  listType="picture-card"
-                  beforeUpload={(file) => {
-                    const isImage = file.type.startsWith('image/');
-                    if (!isImage) {
-                      return Upload.LIST_IGNORE;
-                    }
-                    return true;
-                  }}
-                  style={{ maxWidth: '100%' }}
-                >
-                  <p className="ant-upload-drag-icon">
-                    <UploadOutlined style={{ fontSize: 48 }} />
-                  </p>
-                  <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
-                  <p className="ant-upload-hint">支持 JPG、PNG、GIF 等格式</p>
-                </Upload.Dragger>
+      <Card title="封面上传" style={{ marginBottom: '20px' }}>
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="cover"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={[{ required: true, message: '请上传图书封面' }]}
+          >
+            <Upload.Dragger
+              multiple={false}
+              accept="image/*"
+              listType="picture-card"
+              beforeUpload={(file) => {
+                const isImage = file.type.startsWith('image/');
+                if (!isImage) {
+                  return Upload.LIST_IGNORE;
+                }
+                return true;
+              }}
+              style={{ maxWidth: '100%' }}
+            >
+              <p className="ant-upload-drag-icon">
+                <UploadOutlined style={{ fontSize: 48 }} />
+              </p>
+              <p className="ant-upload-text">点击或拖拽图片到此处上传</p>
+              <p className="ant-upload-hint">支持 JPG、PNG、GIF 等格式</p>
+            </Upload.Dragger>
+          </Form.Item>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <Button 
+              icon={<CameraOutlined />} 
+              type="default" 
+              onClick={handleCameraUpload}
+              block
+              size="large"
+            >
+              拍照上传
+            </Button>
+            <Button 
+              icon={ocrLoading ? <Spin size="small" /> : <SearchOutlined />} 
+              type="primary" 
+              onClick={handleAIIdentify}
+              loading={ocrLoading}
+              block
+              size="large"
+            >
+              {ocrLoading ? 'AI识别中...' : 'AI识别'}
+            </Button>
+          </div>
+        </Form>
+      </Card>
+      
+      <Card title="图书搜索" style={{ marginBottom: '20px' }}>
+        <Form form={form} layout="vertical">
+          {/* ISBN搜索 */}
+          <Row gutter={8} style={{ marginBottom: '16px' }}>
+            <Col xs={24}>
+              <Form.Item name="isbn">
+                <Input placeholder="输入ISBN进行搜索" size="large" />
               </Form.Item>
-              <div style={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: '8px', justifyContent: 'center' }}>
-                <Button 
-                  icon={<CameraOutlined />} 
-                  type="default" 
-                  onClick={handleCameraUpload}
-                >
-                  拍照上传
-                </Button>
-                <Button 
-                  icon={ocrLoading ? <Spin size="small" /> : <SearchOutlined />} 
-                  type="primary" 
-                  onClick={handleAIIdentify}
-                  loading={ocrLoading}
-                >
-                  {ocrLoading ? 'AI识别中...' : 'AI识别'}
-                </Button>
-              </div>
-            </Form>
-          </Card>
-          
-          <Card title="图书搜索">
-            <Form form={form} layout="vertical">
-              {/* ISBN搜索 */}
-              <Row gutter={8} style={{ marginBottom: '16px' }}>
-                <Col xs={24} sm={16} md={16}>
-                  <Form.Item name="isbn">
-                    <Input placeholder="输入ISBN进行搜索" />
-                  </Form.Item>
-                </Col>
-                <Col xs={12} sm={4} md={4}>
-                  <Button 
-                    icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
-                    type="primary" 
-                    onClick={() => {
-                      const isbn = form.getFieldValue('isbn');
-                      if (isbn) {
-                        handleSearchByISBN(isbn);
-                      } else {
-                        message.warning('请输入ISBN');
-                      }
-                    }}
-                    loading={searchLoading}
-                    block
-                  >
-                    {searchLoading ? '搜索中...' : '搜索'}
-                  </Button>
-                </Col>
-
-              </Row>
-              
-              {/* 书名和作者搜索 */}
-              <Row gutter={8} style={{ marginBottom: '16px' }}>
-                <Col span={10}>
-                  <Form.Item name="searchTitle">
-                    <Input placeholder="输入书名" />
-                  </Form.Item>
-                </Col>
-                <Col span={10}>
-                  <Form.Item name="searchAuthor">
-                    <Input placeholder="输入作者" />
-                  </Form.Item>
-                </Col>
-                <Col span={4}>
-                  <Button 
-                    icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
-                    type="default" 
-                    onClick={() => {
-                      const title = form.getFieldValue('searchTitle');
-                      const author = form.getFieldValue('searchAuthor');
-                      if (title || author) {
-                        handleSearchByTitleAndAuthor(title, author);
-                      } else {
-                        message.warning('请输入书名或作者');
-                      }
-                    }}
-                    loading={searchLoading}
-                    block
-                  >
-                    搜索
-                  </Button>
-                </Col>
-              </Row>
-              
-              {/* 搜索提示 */}
-              <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
-                <p>• 方法1：直接输入ISBN码进行搜索（推荐，最准确）</p>
-                <p>• 方法2：输入书名和作者进行搜索</p>
-                <p>• 方法3：上传图书封面后点击"AI识别"按钮（智能识别，准确率更高）</p>
-              </div>
-            </Form>
-          </Card>
-        </Col>
-        
-        <Col xs={24} lg={12}>
-          <Card title="图书信息">
-            <Spin spinning={loading} tip="保存中...">
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSubmit}
+            </Col>
+            <Col xs={24}>
+              <Button 
+                icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
+                type="primary" 
+                onClick={() => {
+                  const isbn = form.getFieldValue('isbn');
+                  if (isbn) {
+                    handleSearchByISBN(isbn);
+                  } else {
+                    message.warning('请输入ISBN');
+                  }
+                }}
+                loading={searchLoading}
+                block
+                size="large"
               >
+                {searchLoading ? '搜索中...' : '搜索ISBN'}
+              </Button>
+            </Col>
+          </Row>
+          
+          {/* 书名和作者搜索 */}
+          <Row gutter={8} style={{ marginBottom: '16px' }}>
+            <Col xs={24} style={{ marginBottom: '8px' }}>
+              <Form.Item name="searchTitle">
+                <Input placeholder="输入书名" size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} style={{ marginBottom: '8px' }}>
+              <Form.Item name="searchAuthor">
+                <Input placeholder="输入作者" size="large" />
+              </Form.Item>
+            </Col>
+            <Col xs={24}>
+              <Button 
+                icon={searchLoading ? <Spin size="small" /> : <SearchOutlined />} 
+                type="default" 
+                onClick={() => {
+                  const title = form.getFieldValue('searchTitle');
+                  const author = form.getFieldValue('searchAuthor');
+                  if (title || author) {
+                    handleSearchByTitleAndAuthor(title, author);
+                  } else {
+                    message.warning('请输入书名或作者');
+                  }
+                }}
+                loading={searchLoading}
+                block
+                size="large"
+              >
+                搜索图书
+              </Button>
+            </Col>
+          </Row>
+          
+          {/* 搜索提示 */}
+          <div style={{ fontSize: '12px', color: '#999', marginTop: '8px', marginBottom: '8px' }}>
+            <p>• 方法1：直接输入ISBN码进行搜索（推荐，最准确）</p>
+            <p>• 方法2：输入书名和作者进行搜索</p>
+            <p>• 方法3：上传图书封面后点击"AI识别"按钮（智能识别）</p>
+          </div>
+        </Form>
+      </Card>
+      
+      <Card title="图书信息">
+        <Spin spinning={loading} tip="保存中...">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+          >
+            <Form.Item
+              name="title"
+              label="书名"
+              rules={[{ required: true, message: '请输入书名' }]}
+            >
+              <Input placeholder="请输入书名" size="large" />
+            </Form.Item>
+            
+            <Form.Item
+              name="author"
+              label="作者"
+              rules={[{ required: true, message: '请输入作者' }]}
+            >
+              <Input placeholder="请输入作者" size="large" />
+            </Form.Item>
+            
+            <Form.Item
+              name="publisher"
+              label="出版社"
+            >
+              <Input placeholder="请输入出版社" size="large" />
+            </Form.Item>
+            
+            <Row gutter={16}>
+              <Col xs={24} style={{ marginBottom: '16px' }}>
                 <Form.Item
-                  name="title"
-                  label="书名"
-                  rules={[{ required: true, message: '请输入书名' }]}
+                  name="publishDate"
+                  label="出版日期"
                 >
-                  <Input placeholder="请输入书名" />
+                  <Input placeholder="YYYY-MM-DD" size="large" />
                 </Form.Item>
-                
+              </Col>
+              <Col xs={24}>
                 <Form.Item
-                  name="author"
-                  label="作者"
-                  rules={[{ required: true, message: '请输入作者' }]}
+                  name="price"
+                  label="价格"
                 >
-                  <Input placeholder="请输入作者" />
+                  <Input placeholder="请输入价格" prefix="¥" size="large" />
                 </Form.Item>
-                
-                <Form.Item
-                  name="publisher"
-                  label="出版社"
-                >
-                  <Input placeholder="请输入出版社" />
-                </Form.Item>
-                
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name="publishDate"
-                      label="出版日期"
-                    >
-                      <Input placeholder="YYYY-MM-DD" />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name="price"
-                      label="价格"
-                    >
-                      <Input placeholder="请输入价格" prefix="¥" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                
-                <Form.Item
-                  name="category"
-                  label="分类"
-                >
-                  <Input placeholder="请输入分类" />
-                </Form.Item>
-                
-                <Form.Item
-                  name="tags"
-                  label="标签"
-                >
-                  <Input placeholder="多个标签用逗号分隔" />
-                </Form.Item>
-                
-                <Form.Item
-                  name="description"
-                  label="描述"
-                >
-                  <Input.TextArea rows={4} placeholder="请输入图书描述" />
-                </Form.Item>
-                
-                <Form.Item
-                  name="location"
-                  label="存放位置"
-                >
-                  <Input placeholder="请输入存放位置" />
-                </Form.Item>
-                
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" block loading={loading}>
-                    保存图书信息
-                  </Button>
-                </Form.Item>
-              </Form>
-            </Spin>
-          </Card>
-        </Col>
-      </Row>
+              </Col>
+            </Row>
+            
+            <Form.Item
+              name="category"
+              label="分类"
+            >
+              <Input placeholder="请输入分类" size="large" />
+            </Form.Item>
+            
+            <Form.Item
+              name="tags"
+              label="标签"
+            >
+              <Input placeholder="多个标签用逗号分隔" size="large" />
+            </Form.Item>
+            
+            <Form.Item
+              name="location"
+              label="存放位置"
+            >
+              <Input placeholder="请输入存放位置" size="large" />
+            </Form.Item>
+            
+            <Form.Item
+              name="description"
+              label="描述"
+            >
+              <Input.TextArea rows={3} placeholder="请输入图书描述" size="large" />
+            </Form.Item>
+            
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block loading={loading} size="large">
+                保存图书信息
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
+      </Card>
       
       {/* 拍照上传模态框 */}
       <Modal
@@ -511,24 +510,24 @@ const AddBook = () => {
         open={cameraVisible}
         onCancel={closeCamera}
         footer={[
-          <Button key="cancel" onClick={closeCamera}>取消</Button>,
-          <Button key="submit" type="primary" onClick={capturePhoto}>拍照</Button>
+          <Button key="cancel" onClick={closeCamera} size="large">取消</Button>,
+          <Button key="submit" type="primary" onClick={capturePhoto} size="large">拍照</Button>
         ]}
-        width={{ xs: '90%', sm: 500 }}
+        width="95%"
+        style={{ maxWidth: '400px' }}
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '16px' }}>
-            <Button type="primary" onClick={startCamera}>开始摄像头</Button>
+            <Button type="primary" onClick={startCamera} size="large">开始摄像头</Button>
           </div>
           <video
             ref={videoRef}
-            style={{ width: '100%', maxWidth: '400px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            style={{ width: '100%', border: '1px solid #d9d9d9', borderRadius: '4px' }}
           />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
         </div>
       </Modal>
       
-
     </div>
   );
 };

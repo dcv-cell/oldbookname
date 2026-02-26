@@ -1,8 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 // Import all pages
-import Home from './pages/Home';
 import AddBook from './pages/AddBook';
 import ManageBooks from './pages/ManageBooks';
 import Books from './pages/Books';
@@ -17,7 +16,7 @@ function App() {
     <Router>
       <ResponsiveNav>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/add-book" replace />} />
           <Route path="/add-book" element={<AddBook />} />
           <Route path="/manage-books" element={<ManageBooks />} />
           <Route path="/books" element={<Books />} />
