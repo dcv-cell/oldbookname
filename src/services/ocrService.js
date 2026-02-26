@@ -28,12 +28,12 @@ class OCRService {
       // 模拟处理延迟
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // 返回一个友好的提示，建议使用其他方法
+      // 返回一个友好的提示，建议使用AI识别
       return {
         title: '',
         author: '',
         isbn: '',
-        rawText: 'OCR服务暂时不可用，建议使用以下方法：\n1. 条形码扫描（最准确）\n2. ISBN码搜索\n3. 手动输入图书信息',
+        rawText: 'OCR服务暂时不可用，建议使用以下方法：\n1. AI识别（最准确）\n2. ISBN码搜索\n3. 手动输入图书信息',
         error: 'OCR服务暂时不可用'
       };
     } catch (error) {
@@ -42,7 +42,7 @@ class OCRService {
         title: '',
         author: '',
         isbn: '',
-        rawText: 'OCR服务暂时不可用，请使用其他方法',
+        rawText: 'OCR服务暂时不可用，请使用AI识别或其他方法',
         error: error.message
       };
     }
@@ -64,7 +64,7 @@ class OCRService {
         title: '',
         author: '',
         isbn: '',
-        rawText: 'OCR服务暂时不可用，请尝试使用条形码扫描功能或手动输入图书信息',
+        rawText: 'OCR服务暂时不可用，请尝试使用AI识别功能或手动输入图书信息',
         error: error.message
       };
     }

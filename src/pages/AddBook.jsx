@@ -7,6 +7,7 @@ import ocrService from '../services/ocrService';
 import bookSearchService from '../services/bookSearchService';
 import barcodeService from '../services/barcodeService';
 import logger from '../services/logService';
+import apiConfig from '../config/apiConfig';
 
 const { Title } = Typography;
 
@@ -21,12 +22,26 @@ const AddBook = () => {
   const [coverImage, setCoverImage] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const barcodeVideoRef = useRef(null);
-  const [barcodeVisible, setBarcodeVisible] = useState(false);
-  const [barcodeScanning, setBarcodeScanning] = useState(false);
 
   useEffect(() => {
     logger.info('AddBook component loaded');
+    
+    // 初始化AI服务
+    try {
+      if (apiConfig.doubao?.apiKey) {
+        logger.info('初始化豆包大模型AI服务');
+        barcodeService.enableAI('doubao', apiConfig.doubao.apiKey);
+        logger.info('AI服务初始化成功');
+      } else if (apiConfig.baidu?.apiKey) {
+        logger.info('初始化百度文心一言AI服务');
+        barcodeService.enableAI('baidu', apiConfig.baidu.apiKey);
+        logger.info('AI服务初始化成功');
+      } else {
+        logger.warn('AI服务API密钥未配置，AI功能将不可用');
+      }
+    } catch (error) {
+      logger.error('AI服务初始化失败', { error: error.message });
+    }
   }, []);
 
   // 当摄像头模态框打开时自动启动摄像头
@@ -52,43 +67,47 @@ const AddBook = () => {
     return e?.fileList;
   };
 
-  // 处理OCR识别
-  const handleOCR = async () => {
+  // 处理AI识别
+  const handleAIIdentify = async () => {
     if (!coverImage) {
-      logger.warn('OCR识别：未上传封面图片');
+      logger.warn('AI识别：未上传封面图片');
       message.warning('请先上传图书封面');
       return;
     }
 
     setOcrLoading(true);
     try {
-      // 使用OCR服务识别图片中的文字
-      logger.info('开始OCR识别流程');
-      const ocrResult = await ocrService.processImage(coverImage);
+      // 使用AI服务识别图片中的完整图书信息
+      logger.info('开始AI识别流程');
       
-      // 检查是否有错误
-      if (ocrResult.error) {
-        logger.warn('OCR服务暂时不可用', { error: ocrResult.error });
-        message.info('OCR服务暂时不可用，请尝试使用条形码扫描功能或手动输入图书信息');
-        return;
-      }
+      // 直接使用AI图像服务进行识别
+      const aiResult = await barcodeService.recognizeBookInfo(coverImage);
       
-      // 提取ISBN并搜索图书信息
-      if (ocrResult.isbn) {
-        logger.info('OCR识别成功，提取到ISBN', { isbn: ocrResult.isbn });
-        await handleSearchByISBN(ocrResult.isbn);
+      if (aiResult) {
+        logger.info('AI识别成功，提取到图书信息', { info: aiResult });
+        
+        // 填充表单字段
+        form.setFieldsValue(aiResult);
+        
+        // 如果提取到了ISBN，也可以尝试搜索更详细的信息
+        if (aiResult.isbn) {
+          logger.info('AI识别到ISBN，尝试搜索更详细的图书信息', { isbn: aiResult.isbn });
+          try {
+            await handleSearchByISBN(aiResult.isbn);
+          } catch (searchError) {
+            logger.warn('ISBN搜索失败，使用AI直接识别的信息', { error: searchError.message });
+            // 即使搜索失败，也已经填充了AI识别的信息
+          }
+        }
+        
+        message.success('AI识别成功，已填充图书信息');
       } else {
-        // 如果未提取到ISBN，只填充识别到的书名和作者
-        logger.info('OCR识别完成，未提取到ISBN，填充基本信息', { title: ocrResult.title, author: ocrResult.author });
-        form.setFieldsValue({
-          title: ocrResult.title,
-          author: ocrResult.author
-        });
-        message.success('OCR识别完成，已填充基本信息');
+        logger.warn('AI识别未提取到图书信息');
+        message.info('AI识别未找到图书信息，请尝试以下方法：\n1. 调整图片角度和光线\n2. 确保封面文字清晰可见\n3. 尝试手动输入图书信息\n4. 检查网络连接');
       }
     } catch (error) {
-      logger.error('OCR识别失败', { error: error.message });
-      message.error('OCR识别失败，请尝试使用条形码扫描功能或手动输入图书信息');
+      logger.error('AI识别失败', { error: error.message });
+      message.error('AI识别失败，请尝试手动输入图书信息或检查网络连接');
     } finally {
       setOcrLoading(false);
     }
@@ -102,12 +121,18 @@ const AddBook = () => {
       logger.info('开始根据ISBN搜索图书信息', { isbn });
       const bookInfo = await bookSearchService.searchByISBN(isbn);
       
-      // 填充表单字段
-      form.setFieldsValue(bookInfo);
-      logger.info('图书信息搜索成功', { title: bookInfo.title, author: bookInfo.author });
-      message.success('图书信息搜索成功');
+      // 检查是否有错误
+      if (bookInfo.error) {
+        logger.error('图书搜索返回错误', { isbn, error: bookInfo.error, description: bookInfo.description });
+        message.error(bookInfo.description || '图书搜索失败，请手动输入');
+      } else {
+        // 填充表单字段
+        form.setFieldsValue(bookInfo);
+        logger.info('图书信息搜索成功', { title: bookInfo.title, author: bookInfo.author });
+        message.success('图书信息搜索成功');
+      }
     } catch (error) {
-      logger.error('图书搜索失败', { isbn, error: error.message });
+      logger.error('图书搜索异常', { isbn, error: error.message });
       message.error('图书搜索失败，请手动输入');
     } finally {
       setSearchLoading(false);
@@ -260,88 +285,9 @@ const AddBook = () => {
     setCameraVisible(false);
   };
 
-  // 打开条形码扫描模态框
-  const handleBarcodeScan = () => {
-    logger.info('打开条形码扫描模态框');
-    setBarcodeVisible(true);
-  };
 
-  // 关闭条形码扫描模态框
-  const closeBarcodeScanner = () => {
-    logger.debug('关闭条形码扫描模态框');
-    setBarcodeVisible(false);
-    setBarcodeScanning(false);
-    // 销毁扫描器
-    barcodeService.destroy();
-  };
 
-  // 处理条形码扫描结果
-  const handleBarcodeDetected = async (code) => {
-    logger.info('条形码扫描成功，开始搜索图书信息', { code });
-    // 停止扫描
-    barcodeService.stopScanning();
-    setBarcodeScanning(false);
-    // 关闭模态框
-    setBarcodeVisible(false);
-    // 填充ISBN并搜索图书信息
-    form.setFieldsValue({ isbn: code });
-    await handleSearchByISBN(code);
-  };
 
-  // 处理上传本地照片进行条形码识别
-  const handleBarcodeUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      // 读取文件为base64
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const imageData = event.target.result;
-        logger.info('开始处理上传的条形码图片');
-        
-        // 使用 barcodeService 解码图片中的条形码
-        const code = await barcodeService.decodeImage(imageData);
-        
-        if (code) {
-          logger.info('本地照片条形码识别成功', { code });
-          // 填充ISBN并搜索图书信息
-          form.setFieldsValue({ isbn: code });
-          await handleSearchByISBN(code);
-        } else {
-          logger.info('未从本地照片中识别到条形码');
-          message.info('未识别到条形码，请确保照片清晰且包含完整的条形码');
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      logger.error('处理本地照片失败', { error: error.message });
-      message.error('处理照片失败，请重试');
-    }
-  };
-
-  // 初始化条形码扫描器
-  useEffect(() => {
-    if (barcodeVisible && barcodeVideoRef.current) {
-      logger.info('初始化条形码扫描器');
-      setBarcodeScanning(true);
-      barcodeService.initScanner(
-        barcodeVideoRef.current,
-        handleBarcodeDetected,
-        (error) => {
-          logger.error('条形码扫描器初始化失败', { error: error.message });
-          message.error('条形码扫描器初始化失败，请重试');
-          setBarcodeScanning(false);
-        }
-      );
-    }
-    // 清理函数
-    return () => {
-      if (!barcodeVisible) {
-        barcodeService.destroy();
-      }
-    };
-  }, [barcodeVisible]);
 
   return (
     <div>
@@ -388,10 +334,10 @@ const AddBook = () => {
                 <Button 
                   icon={ocrLoading ? <Spin size="small" /> : <SearchOutlined />} 
                   type="primary" 
-                  onClick={handleOCR}
+                  onClick={handleAIIdentify}
                   loading={ocrLoading}
                 >
-                  {ocrLoading ? '识别中...' : 'OCR识别'}
+                  {ocrLoading ? 'AI识别中...' : 'AI识别'}
                 </Button>
               </div>
             </Form>
@@ -424,16 +370,7 @@ const AddBook = () => {
                     {searchLoading ? '搜索中...' : '搜索'}
                   </Button>
                 </Col>
-                <Col xs={12} sm={4} md={4}>
-                  <Button 
-                    icon={<CameraOutlined />} 
-                    type="default" 
-                    onClick={handleBarcodeScan}
-                    block
-                  >
-                    扫码
-                  </Button>
-                </Col>
+
               </Row>
               
               {/* 书名和作者搜索 */}
@@ -473,7 +410,7 @@ const AddBook = () => {
               <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
                 <p>• 方法1：直接输入ISBN码进行搜索（推荐，最准确）</p>
                 <p>• 方法2：输入书名和作者进行搜索</p>
-                <p>• 方法3：上传图书封面后点击"OCR识别"按钮（模拟识别，需手动确认）</p>
+                <p>• 方法3：上传图书封面后点击"AI识别"按钮（智能识别，准确率更高）</p>
               </div>
             </Form>
           </Card>
@@ -591,79 +528,7 @@ const AddBook = () => {
         </div>
       </Modal>
       
-      {/* 条形码扫描模态框 */}
-      <Modal
-        title="条形码扫描"
-        open={barcodeVisible}
-        onCancel={closeBarcodeScanner}
-        footer={[
-          <Button key="cancel" onClick={closeBarcodeScanner}>取消</Button>
-        ]}
-        width={{ xs: '90%', sm: 500 }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '16px' }}>
-            <Spin spinning={barcodeScanning} tip="正在扫描..." />
-          </div>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <video
-              ref={barcodeVideoRef}
-              style={{ width: '100%', maxWidth: '400px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-            />
-            {/* 扫描框提示 */}
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '200px',
-              height: '200px',
-              border: '2px solid #1890ff',
-              borderRadius: '4px',
-              pointerEvents: 'none'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-2px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                backgroundColor: '#1890ff',
-                color: '#fff',
-                padding: '2px 8px',
-                fontSize: '12px',
-                borderRadius: '2px'
-              }}>
-                请对准条形码
-              </div>
-            </div>
-          </div>
-          
-          {/* 上传本地照片按钮 */}
-          <div style={{ marginTop: '16px' }}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleBarcodeUpload}
-              style={{ display: 'none' }}
-              id="barcode-upload"
-            />
-            <Button 
-              icon={<UploadOutlined />} 
-              type="default" 
-              onClick={() => document.getElementById('barcode-upload').click()}
-            >
-              上传本地照片
-            </Button>
-          </div>
-          
-          <p style={{ marginTop: '16px', fontSize: '12px', color: '#999' }}>
-            提示：将图书上的ISBN条形码对准扫描框，系统会自动识别并搜索图书信息
-          </p>
-          <p style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
-            或点击"上传本地照片"按钮，选择包含条形码的图片进行识别
-          </p>
-        </div>
-      </Modal>
+
     </div>
   );
 };

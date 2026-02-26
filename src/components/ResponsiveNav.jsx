@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Layout, Button, Drawer } from 'antd';
-import { MenuOutlined, HomeOutlined, PlusOutlined, BookOutlined, ShareAltOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { MenuOutlined, HomeOutlined, PlusOutlined, BookOutlined, ShareAltOutlined, EnvironmentOutlined, FileTextOutlined } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import './ResponsiveNav.css';
 
@@ -47,6 +47,11 @@ const ResponsiveNav = ({ children }) => {
       key: '/locations',
       icon: <EnvironmentOutlined />,
       label: <Link to="/locations">存放管理</Link>
+    },
+    {
+      key: '/logs',
+      icon: <FileTextOutlined />,
+      label: <Link to="/logs">系统日志</Link>
     }
   ];
 

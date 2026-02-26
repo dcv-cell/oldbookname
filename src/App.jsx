@@ -7,6 +7,7 @@ import AddBook from './pages/AddBook';
 import ManageBooks from './pages/ManageBooks';
 import Books from './pages/Books';
 import Locations from './pages/Locations';
+import Logs from './pages/Logs';
 
 // Import responsive navigation component
 import ResponsiveNav from './components/ResponsiveNav';
@@ -21,6 +22,7 @@ function App() {
           <Route path="/manage-books" element={<ManageBooks />} />
           <Route path="/books" element={<Books />} />
           <Route path="/locations" element={<Locations />} />
+          <Route path="/logs" element={<Logs />} />
         </Routes>
       </ResponsiveNav>
     </Router>

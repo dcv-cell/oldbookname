@@ -1,129 +1,109 @@
-import Quagga from 'quagga';
 import logService from './logService';
+import aiImageService from './aiImageService';
 
 class BarcodeService {
   constructor() {
-    this.scanner = null;
-    this.isScanning = false;
-    logService.info('Barcode Service initialized');
+    this.useAI = false; // 是否使用AI识别
+    this.aiApiKey = ''; // AI API密钥
+    this.aiProvider = 'baidu'; // 默认使用百度文心一言
+    logService.info('Barcode Service initialized with AI-only mode');
   }
 
-  // 初始化条形码扫描器
-  initScanner(videoElement, onDetected, onError) {
+  // 启用AI识别
+  enableAI(provider, apiKey) {
+    this.useAI = true;
+    this.aiApiKey = apiKey;
+    this.aiProvider = provider || 'baidu'; // 默认使用百度文心一言
+    
     try {
-      logService.info('Initializing barcode scanner...');
-      
-      Quagga.init({
-        inputStream: {
-          name: 'Live',
-          type: 'LiveStream',
-          target: videoElement,
-          constraints: {
-            facingMode: 'environment' // 使用后置摄像头
-          }
-        },
-        decoder: {
-          readers: ['ean_reader', 'ean_8_reader', 'code_128_reader'] // 支持ISBN等条形码
-        },
-        locate: true,
-        numOfWorkers: 2
-      }, (err) => {
-        if (err) {
-          logService.error('Failed to initialize barcode scanner:', { error: err.message });
-          if (onError) {
-            onError(err);
-          }
+      aiImageService.setApiKey(this.aiProvider, apiKey);
+      aiImageService.setProvider(this.aiProvider);
+      logService.info(`AI recognition enabled with ${aiImageService.getCurrentProvider().name}`);
+    } catch (error) {
+      logService.error('Failed to enable AI:', { error: error.message });
+      throw error;
+    }
+  }
+
+  // 禁用AI识别
+  disableAI() {
+    this.useAI = false;
+    this.aiApiKey = '';
+    this.aiProvider = '';
+    logService.info('AI recognition disabled');
+  }
+
+  // 获取当前AI提供商信息
+  getAIProvider() {
+    if (!this.useAI) {
+      return null;
+    }
+    try {
+      return aiImageService.getCurrentProvider();
+    } catch (error) {
+      logService.error('Failed to get AI provider info:', { error: error.message });
+      return null;
+    }
+  }
+
+  // 解码图像中的ISBN（直接使用AI）
+  async decodeImage(imageData) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        logService.info('Decoding ISBN from image using AI...');
+        
+        if (!this.useAI) {
+          logService.warn('AI recognition is disabled');
+          resolve(null);
           return;
         }
-        
-        logService.info('Barcode scanner initialized successfully');
-        
-        // 注册条形码检测事件
-        Quagga.onDetected((result) => {
-          logService.info('Barcode detected:', { code: result.codeResult.code });
-          if (onDetected) {
-            onDetected(result.codeResult.code);
-          }
-        });
-        
-        // 开始扫描
-        this.startScanning();
-      });
-    } catch (error) {
-      logService.error('Barcode scanner initialization error:', { error: error.message });
-      if (onError) {
-        onError(error);
-      }
-    }
-  }
 
-  // 开始扫描
-  startScanning() {
-    if (!this.isScanning) {
-      try {
-        Quagga.start();
-        this.isScanning = true;
-        logService.info('Barcode scanning started');
+        // 直接使用AI图像服务进行识别
+        const aiResult = await aiImageService.recognizeISBN(imageData);
+        
+        if (aiResult) {
+          logService.info('AI recognition successful:', { isbn: aiResult });
+          resolve(aiResult);
+        } else {
+          logService.warn('AI recognition failed to extract ISBN');
+          resolve(null);
+        }
       } catch (error) {
-        logService.error('Failed to start scanning:', { error: error.message });
+        logService.error('AI decoding error:', { error: error.message });
+        // 即使AI识别失败，也返回null而不是拒绝Promise
+        // 这样前端可以优雅地处理失败情况
+        resolve(null);
       }
-    }
+    });
   }
 
-  // 停止扫描
-  stopScanning() {
-    if (this.isScanning) {
+  // 识别图像中的完整图书信息（直接使用AI）
+  async recognizeBookInfo(imageData) {
+    return new Promise(async (resolve, reject) => {
       try {
-        Quagga.stop();
-        this.isScanning = false;
-        logService.info('Barcode scanning stopped');
-      } catch (error) {
-        logService.error('Failed to stop scanning:', { error: error.message });
-      }
-    }
-  }
-
-  // 销毁扫描器
-  destroy() {
-    this.stopScanning();
-    try {
-      // 检查 Quagga 对象是否存在及其方法是否可用
-      if (Quagga && typeof Quagga.offDetected === 'function') {
-        Quagga.offDetected();
-      }
-      if (Quagga && typeof Quagga.stop === 'function') {
-        Quagga.stop();
-      }
-      logService.info('Barcode scanner destroyed');
-    } catch (error) {
-      logService.error('Failed to destroy scanner:', { error: error.message });
-    }
-  }
-
-  // 手动解码条形码图像
-  async decodeImage(imageData) {
-    return new Promise((resolve, reject) => {
-      try {
-        logService.info('Decoding barcode from image...');
+        logService.info('Recognizing book info from image using AI...');
         
-        Quagga.decodeSingle({
-          src: imageData,
-          decoder: {
-            readers: ['ean_reader', 'ean_8_reader', 'code_128_reader']
-          }
-        }, (result) => {
-          if (result && result.codeResult) {
-            const code = result.codeResult.code;
-            logService.info('Barcode decoding successful:', { code });
-            resolve(code);
-          } else {
-            logService.info('No barcode detected in image');
-            resolve(null);
-          }
-        });
+        if (!this.useAI) {
+          logService.warn('AI recognition is disabled');
+          resolve(null);
+          return;
+        }
+
+        // 直接使用AI图像服务进行识别
+        const aiResult = await aiImageService.recognizeBookInfo(imageData);
+        
+        if (aiResult) {
+          logService.info('AI book info recognition successful:', { info: aiResult });
+          resolve(aiResult);
+        } else {
+          logService.warn('AI recognition failed to extract book info');
+          resolve(null);
+        }
       } catch (error) {
-        logService.error('Barcode decoding error:', { error: error.message });
-        reject(error);
+        logService.error('AI book info recognition error:', { error: error.message });
+        // 即使AI识别失败，也返回null而不是拒绝Promise
+        // 这样前端可以优雅地处理失败情况
+        resolve(null);
       }
     });
   }
